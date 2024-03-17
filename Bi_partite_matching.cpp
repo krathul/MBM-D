@@ -1,6 +1,6 @@
 #include <cstdio>
-#define DEBUG 1
-#define LOGICAL_CHECK 1
+#define DEBUG 0
+#define LOGICAL_CHECK 0
 
 #include "Bi_partite_matching.h"
 
@@ -26,11 +26,15 @@ void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
 #endif
             vertex_inserted = 1;
             bfs_array[col_match] = bfs_level + 1;
-            predecessor[neighbour] = col_match;
+#if LOGICAL_CHECK
+            printf("making %d predecessor as %d\n", neighbour, col_match);
+#endif
+            predecessor[neighbour] = i;
           }
         } else if (col_match == -1) {
 #if LOGICAL_CHECK
           printf("marking %d's rmatch as -2\n", neighbour);
+          printf("making %d predecessor as %d\n", neighbour, i);
 #endif
           rmatch[neighbour] = -2;
           predecessor[neighbour] = i;
@@ -47,14 +51,14 @@ void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
 void alternate(int *&cmatch, int *&rmatch, int *&predecessor, graph *&g) {
   int vertices = g->vertices;
   for (int i = vertices / 2; i < vertices; i++) {
-#if DEBUG
-    printf("\n\nupdating path whose free vertex is %d\n", i);
-#endif
     int r = i;
-#if LOGICAL_CHECK
-    printf("%d's match is %d\n", r, rmatch[r]);
-#endif
     if (rmatch[r] == -2) {
+#if DEBUG
+      printf("\n\nupdating path whose free vertex is %d\n", i);
+#endif
+#if LOGICAL_CHECK
+      printf("%d's match is %d\n", r, rmatch[r]);
+#endif
       while (r != -1) {
         int mc = predecessor[r];
         if (mc < 0) {
@@ -62,10 +66,9 @@ void alternate(int *&cmatch, int *&rmatch, int *&predecessor, graph *&g) {
         }
         int mr = cmatch[mc];
 #if LOGICAL_CHECK
-        printf("%d is predecessor of %d while %d is its match\n", mc, r, mr);
-#endif
-#if LOGICAL_CHECK
+        printf("%d is predecessor of %d but has %d as its match\n", mc, r, mr);
         printf("checking if %d is valid path to update\n", r);
+        printf("mr=%d, and its predecessor is %d\n", mr, predecessor[mr]);
 #endif
         if (mr >= 0 && predecessor[mr] == mc) {
           break;
@@ -84,7 +87,13 @@ void alternate(int *&cmatch, int *&rmatch, int *&predecessor, graph *&g) {
 void fixmatching(int *&cmatch, int *&rmatch, graph *&g) {
   int vertices = g->vertices;
   for (int i = vertices / 2; i < vertices; i++) {
-    if (rmatch[i] >= 0 && cmatch[rmatch[i]] != i) {
+    if ((rmatch[i] == -2) ||
+        (rmatch[i] >= 0 &&
+         cmatch[rmatch[i]] !=
+             i)) { // couldnt find its match or has been wrongly matched
+#if LOGICAL_CHECK
+      printf("marking back %d's rmatch as -1\n", i);
+#endif
       rmatch[i] = -1;
     }
   }
@@ -101,19 +110,20 @@ void match(graph *&Bi_G) {
   for (unsigned int i = 0; i < vertices; i++) {
     cmatch[i] = -1;
     rmatch[i] = -1;
+    predecessor[i] = -1;
   }
   //////////////////////////////////////
   int *bfs_array = new int[vertices];
-  int augumenting_path_found = 1;
-  int vertex_inserted = 1;
+  int augumenting_path_found = 1, vertex_inserted;
   int bfs_level;
   //////////////////////////////////////
   while (augumenting_path_found) {
     for (unsigned int i = 0; i < vertices; i++) {
-      predecessor[i] = -10;
+      predecessor[i] = -1;
     }
     augumenting_path_found = 0;
     bfs_level = L0;
+    vertex_inserted = 1;
     for (unsigned int i = 0; i < vertices / 2;
          i++) { // taking 0...n/2-1 as the vertices
                 // in consideration under one set
