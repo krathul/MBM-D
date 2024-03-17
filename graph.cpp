@@ -7,6 +7,7 @@
 
 using namespace std;
 
+#define V 0
 #define DEBUG 0
 #define LOGICAL_CHECK 0
 
@@ -44,11 +45,15 @@ void file_parser(FILE *&file, int *&srcs, int *&dsts, int &vertices) {
       edges++;
     }
   }
+#if V
   printf("wrote %d edges into src and dst\n", edges);
+#endif
 }
 
 void make_adjacency_list(graph *&g, int *&srcs, int *&dsts) {
+#if V
   printf("starting to make adjacency list\n");
+#endif
   int vertices = g->vertices;
   int edges = g->edges;
   int *ins = new int[100];
@@ -56,7 +61,9 @@ void make_adjacency_list(graph *&g, int *&srcs, int *&dsts) {
   int *out_deg_list = new int[100];
   int *in_deg_list = new int[100];
 
+#if V
   printf("space allocated for adjacency list\n");
+#endif
 
   for (unsigned i = 0; i < g->edges; ++i)
     outs[i] = 0;
@@ -103,7 +110,9 @@ graph *make_graph(FILE *&file, int &verts) {
   bi_edges = count_edges(file, verts);
   fseek(file, 0, SEEK_SET);
   g->edges = bi_edges;
+#if V
   std::cout << "Bipartite graph has " << bi_edges << " edges" << endl;
+#endif
   int *srcs = new int[bi_edges];
   int *dsts = new int[bi_edges];
 #if DEBUG

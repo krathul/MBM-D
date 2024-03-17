@@ -9,12 +9,14 @@ using namespace std;
 #include "Bi_partite_matching.h"
 #include "graph.h"
 
+#define V 0
 #define DEBUG 0
 #define LOGIC_CHECK 0
 
 int main(int argc, char *argv[]) {
+#if V
   printf("give number of vertices as argument 2 and file in 1\n");
-  cout << "First line" << endl;
+#endif
   FILE *file;
   file = fopen(argv[1], "r");
   int verts = stoi(argv[2]);

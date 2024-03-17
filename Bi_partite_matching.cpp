@@ -1,4 +1,6 @@
 #include <cstdio>
+
+#define V 0
 #define DEBUG 0
 #define LOGICAL_CHECK 0
 
