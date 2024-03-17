@@ -56,10 +56,10 @@ void make_adjacency_list(graph *&g, int *&srcs, int *&dsts) {
 #endif
   int vertices = g->vertices;
   int edges = g->edges;
-  int *ins = new int[100];
-  int *outs = new int[100];
-  int *out_deg_list = new int[100];
-  int *in_deg_list = new int[100];
+  int *ins = new int[g->edges];
+  int *outs = new int[g->edges];
+  int *out_deg_list = new int[g->vertices + 1];
+  int *in_deg_list = new int[g->vertices + 1];
 
 #if V
   printf("space allocated for adjacency list\n");
