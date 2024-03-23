@@ -2,7 +2,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -g -Wextra -Wconversion -pedantic -fopenmp -std=c++20
+CXXFLAGS := -Wall -g -Wextra -Wconversion -pedantic -fopenmp -std=c++2a
 
 # Source files
 SRCS := $(wildcard ./*.cpp)
