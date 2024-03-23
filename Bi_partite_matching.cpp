@@ -112,7 +112,6 @@ void match(graph *&Bi_G) {
   for (unsigned int i = 0; i < vertices; i++) {
     cmatch[i] = -1;
     rmatch[i] = -1;
-    predecessor[i] = -1;
   }
   //////////////////////////////////////
   int *bfs_array = new int[vertices];

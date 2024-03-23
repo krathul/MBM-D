@@ -110,7 +110,7 @@ graph *make_graph(FILE *&file, int &verts) {
   bi_edges = count_edges(file, verts);
   fseek(file, 0, SEEK_SET);
   g->edges = bi_edges;
-#if V
+#if LOGICAL_CHECK
   std::cout << "Bipartite graph has " << bi_edges << " edges" << endl;
 #endif
   int *srcs = new int[bi_edges];
