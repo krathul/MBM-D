@@ -46,6 +46,41 @@ void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
           augumenting_path_found = 1;
         }
       }
+      // do it again to emulate undirected, will add proper solo edgelist later
+      degree = g->in_degree_list[i + 1] - g->in_degree_list[i];
+      verts = &g->ins[g->in_degree_list[i]];
+      for (int j = 0; j < degree; j++) {
+        int neighbour = verts[j];
+        int col_match = rmatch[neighbour];
+#if DEBUG
+        printf("vertex = %d, neightbour = %d\n", i, neighbour);
+        printf("neighbour match is %d\n", col_match);
+#endif
+        if (col_match > -1) {
+          if (bfs_array[col_match] == L0 - 1) {
+#if DEBUG
+            printf("doing new bfs level\n");
+#endif
+            vertex_inserted = 1;
+            bfs_array[col_match] = bfs_level + 1;
+#if LOGICAL_CHECK
+            printf("making %d predecessor as %d\n", neighbour, col_match);
+#endif
+            predecessor[neighbour] = i;
+          }
+        } else if (col_match == -1) {
+#if LOGICAL_CHECK
+          printf("marking %d's rmatch as -2\n", neighbour);
+          printf("making %d predecessor as %d\n", neighbour, i);
+#endif
+          rmatch[neighbour] = -2;
+          predecessor[neighbour] = i;
+#if DEBUG
+          printf("Found augumenting path found\n");
+#endif
+          augumenting_path_found = 1;
+        }
+      }
     }
   }
 }
