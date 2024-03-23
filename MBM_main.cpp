@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <omp.h>
 #include <string.h>
 
 using namespace std;
@@ -27,10 +26,7 @@ int main(int argc, char *argv[]) {
 #if DEBUG
   printf("graph is made successfully\n");
 #endif
-  double start = omp_get_wtime();
   match(Bi_G);
-  double end = omp_get_wtime();
-  printf("%fs time taken for matching\n", end - start);
 #if DEBUG
   printf("ran matching sucessfully\n");
 #endif
