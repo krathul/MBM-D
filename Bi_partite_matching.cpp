@@ -130,6 +130,7 @@ void alternate(int *&cmatch, int *&rmatch, int *&predecessor, graph *&g) {
 
 void fixmatching(int *&cmatch, int *&rmatch, graph *&g) {
   int vertices = g->vertices;
+#pragma omp parallel for
   for (int i = vertices / 2; i < vertices; i++) {
     if ((rmatch[i] == -2) ||
         (rmatch[i] >= 0 &&
