@@ -10,7 +10,7 @@
 void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
          int &augumenting_path_found, int &vertex_inserted, int *&predecessor,
          int &L0) {
-#pragma omp parallel for
+#pragma omp for schedule(dynamic)
   for (unsigned int i = 0; i < g->vertices / 2; i++) {
 #if DEBUG
     printf("Work done by %d thread for bfs level %d\n", omp_get_thread_num(),
@@ -178,25 +178,35 @@ void match(graph *&Bi_G) {
 #if DEBUG
     printf("\n\nstarting new bfs to find a new path\n");
 #endif
-#if DEBUG
-    printf("%d threads executing\n", omp_get_num_threads());
-#endif
-    while (vertex_inserted) {
-      vertex_inserted = 0;
-      BFS(bfs_level, bfs_array, Bi_G, rmatch, augumenting_path_found,
-          vertex_inserted, predecessor, L0);
-#if DEBUG
-      printf("DoneBFS level %d\n", bfs_level);
-#endif
-      if (augumenting_path_found) {
-#if DEBUG
-        printf("path found once, breaking by %d\n", omp_get_thread_num());
-#endif
-        break;
-      }
-      bfs_level += 1;
-    }
 
+#pragma omp parallel shared(augumenting_path_found, bfs_level)
+    {
+#if DEBUG
+      printf("%d threads executing\n", omp_get_num_threads());
+#endif
+      while (vertex_inserted) {
+#if DEBUG
+        printf("Starting BFS level %d by %d thread\n", bfs_level,
+               omp_get_thread_num());
+#endif
+#pragma omp barrier
+        vertex_inserted = 0;
+        BFS(bfs_level, bfs_array, Bi_G, rmatch, augumenting_path_found,
+            vertex_inserted, predecessor, L0);
+#if DEBUG
+        printf("DoneBFS level %d\n", bfs_level);
+#endif
+        // #pragma omp barrier
+        if (augumenting_path_found) {
+#if DEBUG
+          printf("path found once, breaking by %d\n", omp_get_thread_num());
+#endif
+          break;
+        }
+#pragma omp single
+        { bfs_level += 1; }
+      }
+    }
     alternate(cmatch, rmatch, predecessor, Bi_G);
     fixmatching(cmatch, rmatch, Bi_G);
   }

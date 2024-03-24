@@ -28,3 +28,7 @@ $(TARGET): $(OBJS)
 # Clean
 clean:
 	rm -f $(TARGET)
+
+all_clean:
+	rm -f $(OBJS)
+	rm -f $(TARGET)
