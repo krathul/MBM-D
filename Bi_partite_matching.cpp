@@ -93,6 +93,7 @@ void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
 
 void alternate(int *&cmatch, int *&rmatch, int *&predecessor, graph *&g) {
   int vertices = g->vertices;
+#pragma omp parallel for
   for (int i = vertices / 2; i < vertices; i++) {
     int r = i;
     if (rmatch[r] == -2) {

@@ -15,8 +15,13 @@ using namespace std;
 #define LOGIC_CHECK 0
 
 int main(int argc, char *argv[]) {
+  int thread_count = 2;
+  if (argc == 4) {
+    thread_count = stoi(argv[3]);
+  }
+  printf("Running with %d threads\n", thread_count);
   omp_set_dynamic(0);
-  omp_set_num_threads(stoi(argv[3]));
+  omp_set_num_threads(thread_count);
 #if V
   printf("give number of vertices as argument 2 and file in 1\n");
 #endif
