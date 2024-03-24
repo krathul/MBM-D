@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <omp.h>
 
 #define V 0
 #define DEBUG 0
@@ -9,7 +10,11 @@
 void BFS(int &bfs_level, int *&bfs_array, graph *&g, int *&rmatch,
          int &augumenting_path_found, int &vertex_inserted, int *&predecessor,
          int &L0) {
+#pragma omp parallel for
   for (unsigned int i = 0; i < g->vertices / 2; i++) {
+#if DEBUG
+    printf("Work done by %d thread\n", omp_get_thread_num());
+#endif
     if (bfs_level == bfs_array[i]) { // probably better to make a array with
                                      // only
       int degree = g->out_degree_list[i + 1] - g->out_degree_list[i];
@@ -173,20 +178,33 @@ void match(graph *&Bi_G) {
     printf("\n\nstarting new bfs to find a new path\n");
 #endif
 
-    while (vertex_inserted) {
+    // #pragma omp parallel
+    {
 #if DEBUG
-      printf("%d level bfs\n", bfs_level);
+      // printf("%d threads executing\n", omp_get_num_threads());
 #endif
-      vertex_inserted = 0;
-      BFS(bfs_level, bfs_array, Bi_G, rmatch, augumenting_path_found,
-          vertex_inserted, predecessor, L0);
-      if (augumenting_path_found) {
+      while (vertex_inserted) {
 #if DEBUG
-        printf("path found once\n");
+        printf("%d level bfs\n", bfs_level);
 #endif
-        break;
+        vertex_inserted = 0;
+#if DEBUG
+        printf("Starting BFS level %d\n", bfs_level);
+#endif
+        BFS(bfs_level, bfs_array, Bi_G, rmatch, augumenting_path_found,
+            vertex_inserted, predecessor, L0);
+#if DEBUG
+        printf("DoneBFS level %d\n", bfs_level);
+#endif
+#pragma omp barrier
+        if (augumenting_path_found) {
+#if DEBUG
+          printf("path found once\n");
+#endif
+          break;
+        }
+        bfs_level += 1;
       }
-      bfs_level += 1;
     }
     alternate(cmatch, rmatch, predecessor, Bi_G);
     fixmatching(cmatch, rmatch, Bi_G);

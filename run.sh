@@ -1,2 +1,2 @@
 #!/bin/bash
-./MBM test.graph $1
+./MBM test.graph 8 4
