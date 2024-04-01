@@ -8,6 +8,7 @@
 using namespace std;
 
 #include "Bi_partite_matching.h"
+#include "Dynamic.h"
 #include "graph.h"
 
 #define V 0
@@ -16,8 +17,8 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   int thread_count = 2;
-  if (argc == 4) {
-    thread_count = stoi(argv[3]);
+  if (argc == 5) {
+    thread_count = stoi(argv[4]);
   }
   printf("Running with %d threads\n", thread_count);
   omp_set_dynamic(0);
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]) {
   printf("ran matching sucessfully\n");
 #endif
   printf("Maximum cardinality = %d\n", Bi_G->cardinality);
+
   clean_graph(Bi_G);
   delete Bi_G;
 }
