@@ -1,4 +1,5 @@
 #include "Insertion.h"
+#define DEBUG 0
 
 void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
                  int *&ina_path, int *&curr, int *&next, int *&path,
@@ -10,6 +11,7 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
   int pathfound = 0,
       new_path_found = 0; // to demarcate if we have clashing path or new path
   curr[0] = vert;
+  in_bfs[vert] = 1;
   while (bfs_count) {
     bfs_count = 0;
     for (int i = 0; i < bfs_count; i++) {
@@ -25,9 +27,12 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         neighbours = &Bi_G->ins[Bi_G->in_degree_list[curr_vert]];
         for (int j = 0; j < neigh_count; j++) {
           int neighbour = neighbours[j];
-          if (Bi_G->matching[neighbour] !=
-              -1) { // if neighbour has a matching add matching to bfs array
+          if (Bi_G->matching[neighbour] != -1 &&
+              !in_bfs[Bi_G->matching[neighbour]]) { // if neighbour has a
+                                                    // matching add matching to
+                                                    // bfs array
             next[bfs_count++] = Bi_G->matching[neighbour];
+            in_bfs[Bi_G->matching[neighbour]] = 1;
             path[Bi_G->matching[neighbour]] = curr_vert;
           } else { // neighbour is unmatched, end search_path
             pathfound = 1;
@@ -41,9 +46,12 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         neighbours = &Bi_G->outs[Bi_G->out_degree_list[curr_vert]];
         for (int j = 0; j < neigh_count; j++) {
           int neighbour = neighbours[j];
-          if (Bi_G->matching[neighbour] !=
-              -1) { // if neighbour has a matching add matching to bfs array
+          if (Bi_G->matching[neighbour] != -1 &&
+              !in_bfs[Bi_G->matching[neighbour]]) { // if neighbour has a
+                                                    // matching add matching to
+                                                    // bfs array
             next[bfs_count++] = Bi_G->matching[neighbour];
+            in_bfs[Bi_G->matching[neighbour]] = 1;
             path[Bi_G->matching[neighbour]] = curr_vert;
           } else { // neighbour is unmatched, end search_path
             pathfound = 1;
@@ -66,17 +74,21 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
       }
       descendant[path[temp]] = temp;
       temp = path[temp];
-      ina_path[temp] = 1; // marking parent belongs to a path now
-    }
-    if (new_path_found) {
-      end_points[vert] = end_vertex;
-    } else {
-      end_points[vert] = end_points[end_vertex];
+      ina_path[temp] = 1;   // marking parent belongs to a path now
+      if (new_path_found) { // updating parents endpoints
+        end_points[temp] = end_vertex;
+      } else {
+        end_points[temp] = end_points[end_vertex];
+      }
     }
   }
 }
 
-void make_potential_paths(graph *&Bi_G, int *&descendant, int *&end_points) {
+void make_potential_paths(
+    graph *&Bi_G, int *&descendant,
+    int *&end_points) { // see if we can make an array to account for vertices
+                        // already searched path for, in serial these vertices
+                        // can be discarded after searched once tbh
   int *ina_path,
       *path; // path will allow reverse travel to update descendant
   int *bfs_verts, *next_bfs_verts, *in_bfs;
@@ -100,7 +112,7 @@ void make_potential_paths(graph *&Bi_G, int *&descendant, int *&end_points) {
       path[j] = -1;
       in_bfs[j] = 0;
     }
-    if (Bi_G->matching[i] != -1) {
+    if (Bi_G->matching[i] != -1 && !ina_path[i]) {
       search_path(i, descendant, Bi_G, ina_path, bfs_verts, next_bfs_verts,
                   path, in_bfs, end_points);
     }
