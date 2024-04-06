@@ -1,7 +1,11 @@
-#include <string>
-
 #ifndef GRAPH_H
 #define GRAPH_H
+
+#include <set>
+#include <string>
+#include <utility>
+
+typedef std::set<std::pair<int, int>> edge_set;
 
 typedef struct graph {
   unsigned vertices;

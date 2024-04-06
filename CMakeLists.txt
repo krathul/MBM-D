@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.0)
+project(MBM)
+find_package(OpenMP REQUIRED)
+include_directories( . )
+file(GLOB SOURCES *.cpp)
+add_executable(MBM ${SOURCES} )
+if(OPENMP_FOUND)
+  target_link_libraries(MBM PUBLIC OpenMP::OpenMP_CXX)
+  target_compile_options(MBM PUBLIC "-Wall" "-Wextra" "-Wconversion" "-pedantic" "-std=c++2a")
+endif()
+

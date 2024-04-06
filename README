@@ -1,1 +1,6 @@
 Starting with dynamic updates
+ commands currently used for bulding:
+ mkdir build
+ cd build/
+ cmake ../
+ make

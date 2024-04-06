@@ -1,6 +1,7 @@
 output
 *sh
 .cache/
+build/
 compile_commands.json
 to_do_list.txt
 test.graph

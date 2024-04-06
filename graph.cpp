@@ -54,8 +54,8 @@ void make_adjacency_list(graph *&g, int *&srcs, int *&dsts) {
 #if V
   printf("starting to make adjacency list\n");
 #endif
-  int vertices = g->vertices;
-  int edges = g->edges;
+  unsigned int vertices = g->vertices;
+  unsigned int edges = g->edges;
   int *ins = new int[g->edges];
   int *outs = new int[g->edges];
   int *out_deg_list = new int[g->vertices + 1];
@@ -65,34 +65,34 @@ void make_adjacency_list(graph *&g, int *&srcs, int *&dsts) {
   printf("space allocated for adjacency list\n");
 #endif
 
-  for (unsigned i = 0; i < g->edges; ++i)
+  for (unsigned i = 0; i < edges; ++i)
     outs[i] = 0;
-  for (unsigned i = 0; i < g->edges; ++i)
+  for (unsigned i = 0; i < edges; ++i)
     ins[i] = 0;
-  for (unsigned int i = 0; i < g->vertices + 1; ++i)
+  for (unsigned int i = 0; i < vertices + 1; ++i)
     out_deg_list[i] = 0;
-  for (unsigned int i = 0; i < g->vertices + 1; ++i)
+  for (unsigned int i = 0; i < vertices + 1; ++i)
     in_deg_list[i] = 0;
 
-  int *temp_counts = new int[g->vertices];
-  for (unsigned int i = 0; i < g->vertices; ++i)
+  int *temp_counts = new int[vertices];
+  for (unsigned int i = 0; i < vertices; ++i)
     temp_counts[i] = 0;
-  for (unsigned i = 0; i < g->edges; ++i)
+  for (unsigned i = 0; i < edges; ++i)
     ++temp_counts[srcs[i]];
-  for (unsigned int i = 0; i < g->vertices; ++i)
+  for (unsigned int i = 0; i < vertices; ++i)
     out_deg_list[i + 1] = out_deg_list[i] + temp_counts[i];
-  copy(out_deg_list, out_deg_list + g->vertices, temp_counts);
-  for (unsigned i = 0; i < g->edges; ++i)
+  copy(out_deg_list, out_deg_list + vertices, temp_counts);
+  for (unsigned i = 0; i < edges; ++i)
     outs[temp_counts[srcs[i]]++] = dsts[i];
 
-  for (unsigned int i = 0; i < g->vertices; ++i)
+  for (unsigned int i = 0; i < vertices; ++i)
     temp_counts[i] = 0;
-  for (unsigned i = 0; i < g->edges; ++i)
+  for (unsigned i = 0; i < edges; ++i)
     ++temp_counts[dsts[i]];
-  for (unsigned int i = 0; i < g->vertices; ++i)
+  for (unsigned int i = 0; i < vertices; ++i)
     in_deg_list[i + 1] = in_deg_list[i] + temp_counts[i];
-  copy(in_deg_list, in_deg_list + g->vertices, temp_counts);
-  for (unsigned i = 0; i < g->edges; ++i)
+  copy(in_deg_list, in_deg_list + vertices, temp_counts);
+  for (unsigned i = 0; i < edges; ++i)
     ins[temp_counts[dsts[i]]++] = srcs[i];
 
   delete[] temp_counts;
