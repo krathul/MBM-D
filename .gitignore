@@ -4,7 +4,7 @@ output
 build/
 compile_commands.json
 to_do_list.txt
-test.graph
+*.graph
 testing.py
 MBM
-
+gdb_history

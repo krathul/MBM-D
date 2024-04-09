@@ -1,5 +1,6 @@
 #include "Insertion.h"
-#define DEBUG 0
+#include <cstdio>
+#define DEBUG 1
 
 void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
                  int *&ina_path, int *&curr, int *&next, int *&path,
@@ -82,6 +83,9 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
       }
     }
   }
+#if DEBUG
+  printf("%d's path found\n", vert);
+#endif
 }
 
 void make_potential_paths(
@@ -94,6 +98,7 @@ void make_potential_paths(
   int *bfs_verts, *next_bfs_verts, *in_bfs;
   unsigned int vertices = Bi_G->vertices;
   // potentially these below arrays can be made half their size
+  path = new int[vertices];       // for noting down thw path
   descendant = new int[vertices]; //-1 means no descendant, or else points to
                                   // potential descendant that can be used
   end_points = new int[vertices]; // tell end point of the point of given vertex
@@ -118,15 +123,25 @@ void make_potential_paths(
                   path, in_bfs, end_points);
     }
   }
+#if DEBUG
+  printf("Potential paths found\n");
+#endif
   delete[] path;
+  delete[] in_bfs;
   delete[] ina_path;
   delete[] bfs_verts;
   delete[] next_bfs_verts;
+#if DEBUG
+  printf("Potential paths found\n");
+#endif
 }
 
 void update_because_path_exists(
     int *&descendant, int *&end_points, graph *&Bi_G,
     int V) { // passing V not by reference since we are updating it in function
+#if DEBUG
+  printf("%d being updated because a path is available\n", V);
+#endif
   while (descendant[V] != -1) { // stop when no more descendant is there
     Bi_G->matching[V] = Bi_G->matching[descendant[V]];
     Bi_G->matching[descendant[V]] = V;
@@ -137,29 +152,45 @@ void update_because_path_exists(
 }
 
 void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
-                            int *&E1, int *&E2, unsigned int &I_count) {
-  int *used = new int[Bi_G->vertices]; // tells if that endpoint was already
-                                       // used to find as a path
+                            int *&E1, int *&E2, unsigned int &I_count,
+                            int *&used) {
+  int *matching = Bi_G->matching;
+#if DEBUG
+  printf("%d vertices\n", Bi_G->vertices);
+#endif
+  used = new int[Bi_G->vertices]; // tells if that endpoint was already
+                                  // used to find as a path
   for (unsigned int i = 0; i < Bi_G->vertices; i++) {
     used[i] = 0;
   }
   for (unsigned int i = 0; i < I_count; i++) {
-    if (E1[i] < Bi_G->vertices / 2 &&
-        !used[end_points[Bi_G->matching[E2[i]]]]) {
+    int V1 = E1[i];
+    int V2 = E2[i];
+    if (V1 > V2) {
+      std::swap(V1, V2); // ensure V1 is smaller i.e, V1<N/2
+    }
+#if DEBUG
+    printf("checking %d<-->%d\n", V1, V2);
+#endif
+    if (matching[V1] == -1 && matching[V2] == -1) {
+#if DEBUG
+      printf("adding %d--%d\n", V1, V2);
+#endif
+      matching[V1] = V2;
+      matching[V2] = V1;
+      Bi_G->cardinality++;
+      continue;
+    } else if (matching[V1] != -1 &&
+               matching[V2] == -1) { // current implementation, doesnt have path
+                                     // for vertices > N/2
+      continue;
+    } else if (matching[V1] == -1 && !used[end_points[matching[V2]]]) {
       // do it atomic if implemented in parallel
-      used[end_points[Bi_G->matching[E2[i]]]] = 1;
-      update_because_path_exists(descendant, end_points, Bi_G,
-                                 Bi_G->matching[E2[i]]);
-      Bi_G->matching[E2[i]] = E1[i];
-      Bi_G->matching[E1[i]] = E2[i];
-    } else if (E2[i] < Bi_G->vertices / 2 &&
-               !used[end_points[Bi_G->matching[E1[i]]]]) {
-      // do it atomic if implemented in parallel
-      used[end_points[Bi_G->matching[E1[i]]]] = 1;
-      update_because_path_exists(descendant, end_points, Bi_G,
-                                 Bi_G->matching[E1[i]]);
-      Bi_G->matching[E1[i]] = E2[i];
-      Bi_G->matching[E2[i]] = E1[i];
+      used[end_points[matching[V2]]] = 1;
+      update_because_path_exists(descendant, end_points, Bi_G, matching[V2]);
+      matching[V2] = V1;
+      matching[V1] = V2;
+      Bi_G->cardinality++;
     }
   }
 }

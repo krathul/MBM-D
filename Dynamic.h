@@ -5,6 +5,6 @@
 #include "graph.h"
 #include <cstdio>
 
-void graph_update(graph *&Bi_G, char *file);
+void graph_update(graph *&Bi_G, char *&file);
 
 #endif

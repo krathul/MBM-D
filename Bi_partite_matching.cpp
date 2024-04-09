@@ -145,9 +145,13 @@ void fixmatching(int *&cmatch, int *&rmatch, graph *&g) {
 }
 
 void match(graph *&Bi_G) {
+  printf("Starting with bi-partite matching\n");
   unsigned vertices = Bi_G->vertices;
   int L0 = 0;
-  //////////////////////////////////////
+//////////////////////////////////////
+#if DEBUG
+  printf("creating ararys of size %u vertices\n", Bi_G->vertices);
+#endif
   int *cmatch = new int[vertices];
   int *rmatch = new int[vertices];
   int *predecessor = new int[vertices];
@@ -158,7 +162,7 @@ void match(graph *&Bi_G) {
   }
   //////////////////////////////////////
   int *bfs_array = new int[vertices];
-  int augumenting_path_found = 1, vertex_inserted;
+  int augumenting_path_found = 1, vertex_inserted = 1;
   int bfs_level;
   //////////////////////////////////////
   while (augumenting_path_found) {

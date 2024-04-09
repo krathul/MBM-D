@@ -125,10 +125,17 @@ graph *make_graph(FILE *&file, int &verts) {
   make_adjacency_list(g, srcs, dsts);
 #if DEBUG
   printf("adjacency list finished\n");
+  // printf("%d verts assigning to graph\n", verts);
 #endif
-  g->matching = new int[verts];
+  g->matching = new int[g->vertices];
+#if DEBUG
+  printf("graph has %d vertices\n", g->vertices);
+#endif
   delete[] srcs;
   delete[] dsts;
   fseek(file, 0, SEEK_SET);
+#if DEBUG
+  printf("graph is made successfully\n");
+#endif
   return g;
 }
