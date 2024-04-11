@@ -1,28 +1,41 @@
 #include "Insertion.h"
 #include <cstdio>
 #define DEBUG 0
-#define LOGICAL_ERROR 1
+#define LOGICAL_ERROR 0
+#define PROGRESS_CHECK 1
+
+int threshold = 1;
 
 void traverse_neighbours(int &curr_vert, int *&degree_list, int *&edges,
                          int *&matching, int *&next, int *&in_bfs, int *&path,
                          int &bfs_count, int &pathfound, int &new_path_found,
-                         int &end_vertex) {
+                         int &end_vertex, int &path_end) {
   int neigh_count, *neighbours;
   neigh_count = degree_list[curr_vert + 1] - degree_list[curr_vert];
   neighbours = &edges[degree_list[curr_vert]];
   for (int j = 0; j < neigh_count; j++) {
     int neighbour = neighbours[j];
-    if (matching[neighbour] != -1 &&
-        !in_bfs[matching[neighbour]]) { // if neighbour has a
-                                        // matching add matching to
-                                        // bfs array
-      next[bfs_count++] = matching[neighbour];
-      in_bfs[matching[neighbour]] = 1;
-      path[matching[neighbour]] = curr_vert;
-    } else { // neighbour is unmatched, end search_path
+    int nmatch = matching[neighbour];
+#if LOGICAL_ERROR
+    printf("checking neighbour %d, nmatch is %d and bfs status %d\n", neighbour,
+           nmatch, in_bfs[nmatch]);
+#endif
+    if (nmatch != -1 && !in_bfs[nmatch]) { // if neighbour has a
+                                           // matching add matching to
+                                           // bfs array
+      next[bfs_count++] = nmatch;
+      in_bfs[nmatch] = 1;
+      path[nmatch] = curr_vert;
+    } else if (nmatch == -1) { // neighbour is unnmatched, end search_path
+#if LOGICAL_ERROR
+      printf("new path found, path end in %d with end vertex %d, will stop "
+             "exploring neighbours\n",
+             curr_vert, neighbour);
+#endif
       pathfound = 1;
       new_path_found = 1;
       end_vertex = neighbour;
+      path_end = curr_vert;
       break;
     }
   }
@@ -34,51 +47,67 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
 #if LOGICAL_ERROR
   printf("Searching path for %d\n", vert);
 #endif
-  int end_vertex, bfs_count = 1, *temp_pointer;
+  int end_vertex, path_end, bfs_count = 1, next_bfs_count,
+                            *temp_pointer; // path end is paths end, end_vertex
+                                           // is the potential match we go with
   int pathfound = 0,
       new_path_found = 0; // to demarcate if we have clashing path or new path
   curr[0] = vert;
   in_bfs[vert] = 1;
   while (bfs_count) {
-    bfs_count = 0;
+#if LOGICAL_ERROR
+    printf("BFSing\n");
+#endif
+    next_bfs_count = 0;
     for (int i = 0; i < bfs_count; i++) {
       int curr_vert = curr[i];
       if (ina_path[curr_vert]) { // clashing path is found, hence we store it
                                  // temporarily
         pathfound = 1;
+        path_end = curr_vert;
         end_vertex = end_points[curr_vert];
       } else {
         traverse_neighbours(curr_vert, Bi_G->in_degree_list, Bi_G->ins,
-                            Bi_G->matching, next, in_bfs, path, bfs_count,
-                            pathfound, new_path_found, end_vertex);
+                            Bi_G->matching, next, in_bfs, path, next_bfs_count,
+                            pathfound, new_path_found, end_vertex, path_end);
+        if (new_path_found) {
+          break;
+        }
         traverse_neighbours(curr_vert, Bi_G->out_degree_list, Bi_G->outs,
-                            Bi_G->matching, next, in_bfs, path, bfs_count,
-                            pathfound, new_path_found, end_vertex);
+                            Bi_G->matching, next, in_bfs, path, next_bfs_count,
+                            pathfound, new_path_found, end_vertex, path_end);
+        if (new_path_found) {
+          break;
+        }
       }
     }
+    bfs_count = next_bfs_count;
     temp_pointer = curr;
     curr = next;
     next = temp_pointer;
   }
 #if LOGICAL_ERROR
   if (new_path_found) {
-    printf("new path found for %d\n", vert);
+    printf("new path found for %d with %d end_point\n", vert, end_vertex);
   }
 #endif
   if (pathfound) {
-    int temp = end_vertex;
+    int temp = path_end;
     while (true) {
+#if LOGICAL_ERROR
+      printf("Updating descendants\n");
+#endif
+      ina_path[temp] = 1;
+      if (new_path_found) { // updating parents endpoints
+        end_points[temp] = end_vertex;
+      } else {
+        end_points[temp] = end_points[path_end];
+      }
       if (temp == vert) {
         break;
       }
       descendant[path[temp]] = temp;
       temp = path[temp];
-      ina_path[temp] = 1;   // marking parent belongs to a path now
-      if (new_path_found) { // updating parents endpoints
-        end_points[temp] = end_vertex;
-      } else {
-        end_points[temp] = end_points[end_vertex];
-      }
     }
 #if LOGICAL_ERROR
     printf("%d's path found with end vertex as %d\n", vert, end_points[vert]);
@@ -114,11 +143,17 @@ void make_potential_paths(
     in_bfs[i] = 0;
   }
   for (unsigned int i = 0; i < vertices / 2; i++) {
-    for (int j = 0; j < vertices; j++) {
-      path[j] = -1;
-      in_bfs[j] = 0;
+#if PROGRESS_CHECK
+    if (i == vertices * threshold / 200) {
+      printf("%d%% done\n", threshold);
+      threshold *= 2;
     }
+#endif
     if (Bi_G->matching[i] != -1 && !ina_path[i]) {
+      /*for (int j = 0; j < vertices; j++) {
+        path[j] = -1;
+        in_bfs[j] = 0;
+      }*/
       search_path(i, descendant, Bi_G, ina_path, bfs_verts, next_bfs_verts,
                   path, in_bfs, end_points);
     }

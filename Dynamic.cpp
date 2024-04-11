@@ -3,7 +3,9 @@
 #include "Insertion.h"
 #include <Modified_Bi_partite_matching.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <omp.h>
 #include <stdio.h>
 
 #define DEBUG 0
@@ -115,9 +117,8 @@ void graph_update(graph *&Bi_G, char *&file) {
   parse_update_file(update_file, E1, E2, DE1, DE2, D_count, I_count,
                     Bi_G->vertices, deleted_edges);
   fclose(update_file);
-#if DEBUG
   printf("Starting with updating the graph\n");
-#endif
+  double start = omp_get_wtime();
   update_inserting_edges(Bi_G, descendant, end_points, E1, E2, I_count, used);
   diff_edges =
       new unsigned int[I_count *
@@ -128,6 +129,11 @@ void graph_update(graph *&Bi_G, char *&file) {
   }
   make_diff_csr(E1, E2, diff_edges, diff_deg_list, Bi_G->vertices, I_count);
   update_deleteing_edges(Bi_G, DE1, DE2, D_count);
+  printf("Graph has been updated with new info, starting for bipartite "
+         "matching now\n");
+  M_match(Bi_G, diff_deg_list, diff_edges, deleted_edges);
+  double end = omp_get_wtime();
+  printf("\n%f second taken for update\n", end - start);
   delete[] E1;
   delete[] E2;
   delete[] DE1;
@@ -135,9 +141,6 @@ void graph_update(graph *&Bi_G, char *&file) {
   delete[] descendant;
   delete[] used;
   delete[] end_points;
-  printf("Graph has been updated with new info, starting for bipartite "
-         "matching now\n");
-  M_match(Bi_G, diff_deg_list, diff_edges, deleted_edges);
   delete[] diff_edges;
   delete[] diff_deg_list;
 }

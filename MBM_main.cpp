@@ -44,6 +44,11 @@ int main(int argc, char *argv[]) {
   printf("ran matching sucessfully\n");
 #endif
   printf("Maximum cardinality = %d\n", Bi_G->cardinality);
+#if LOGIC_CHECK
+  for (unsigned int i = 0; i < Bi_G->vertices; i++) {
+    printf("match of %d-->%d\n", i, Bi_G->matching[i]);
+  }
+#endif
 
   printf("\nGoing to start with dynamic update\n");
   graph_update(Bi_G, argv[3]);
