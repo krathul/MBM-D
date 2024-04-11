@@ -1,11 +1,37 @@
 #include "Insertion.h"
 #include <cstdio>
-#define DEBUG 1
+#define DEBUG 0
+#define LOGICAL_ERROR 1
+
+void traverse_neighbours(int &curr_vert, int *&degree_list, int *&edges,
+                         int *&matching, int *&next, int *&in_bfs, int *&path,
+                         int &bfs_count, int &pathfound, int &new_path_found,
+                         int &end_vertex) {
+  int neigh_count, *neighbours;
+  neigh_count = degree_list[curr_vert + 1] - degree_list[curr_vert];
+  neighbours = &edges[degree_list[curr_vert]];
+  for (int j = 0; j < neigh_count; j++) {
+    int neighbour = neighbours[j];
+    if (matching[neighbour] != -1 &&
+        !in_bfs[matching[neighbour]]) { // if neighbour has a
+                                        // matching add matching to
+                                        // bfs array
+      next[bfs_count++] = matching[neighbour];
+      in_bfs[matching[neighbour]] = 1;
+      path[matching[neighbour]] = curr_vert;
+    } else { // neighbour is unmatched, end search_path
+      pathfound = 1;
+      new_path_found = 1;
+      end_vertex = neighbour;
+      break;
+    }
+  }
+}
 
 void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
                  int *&ina_path, int *&curr, int *&next, int *&path,
                  int *&in_bfs, int *&end_points) {
-#if DEBUG
+#if LOGICAL_ERROR
   printf("Searching path for %d\n", vert);
 #endif
   int end_vertex, bfs_count = 1, *temp_pointer;
@@ -22,51 +48,23 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         pathfound = 1;
         end_vertex = end_points[curr_vert];
       } else {
-        int neigh_count, *neighbours;
-        neigh_count = Bi_G->in_degree_list[curr_vert + 1] -
-                      Bi_G->in_degree_list[curr_vert];
-        neighbours = &Bi_G->ins[Bi_G->in_degree_list[curr_vert]];
-        for (int j = 0; j < neigh_count; j++) {
-          int neighbour = neighbours[j];
-          if (Bi_G->matching[neighbour] != -1 &&
-              !in_bfs[Bi_G->matching[neighbour]]) { // if neighbour has a
-                                                    // matching add matching to
-                                                    // bfs array
-            next[bfs_count++] = Bi_G->matching[neighbour];
-            in_bfs[Bi_G->matching[neighbour]] = 1;
-            path[Bi_G->matching[neighbour]] = curr_vert;
-          } else { // neighbour is unmatched, end search_path
-            pathfound = 1;
-            new_path_found = 1;
-            end_vertex = neighbour;
-            break;
-          }
-        }
-        neigh_count = Bi_G->out_degree_list[curr_vert + 1] -
-                      Bi_G->out_degree_list[curr_vert];
-        neighbours = &Bi_G->outs[Bi_G->out_degree_list[curr_vert]];
-        for (int j = 0; j < neigh_count; j++) {
-          int neighbour = neighbours[j];
-          if (Bi_G->matching[neighbour] != -1 &&
-              !in_bfs[Bi_G->matching[neighbour]]) { // if neighbour has a
-                                                    // matching add matching to
-                                                    // bfs array
-            next[bfs_count++] = Bi_G->matching[neighbour];
-            in_bfs[Bi_G->matching[neighbour]] = 1;
-            path[Bi_G->matching[neighbour]] = curr_vert;
-          } else { // neighbour is unmatched, end search_path
-            pathfound = 1;
-            new_path_found = 1;
-            end_vertex = neighbour;
-            break;
-          }
-        }
+        traverse_neighbours(curr_vert, Bi_G->in_degree_list, Bi_G->ins,
+                            Bi_G->matching, next, in_bfs, path, bfs_count,
+                            pathfound, new_path_found, end_vertex);
+        traverse_neighbours(curr_vert, Bi_G->out_degree_list, Bi_G->outs,
+                            Bi_G->matching, next, in_bfs, path, bfs_count,
+                            pathfound, new_path_found, end_vertex);
       }
     }
     temp_pointer = curr;
     curr = next;
     next = temp_pointer;
   }
+#if LOGICAL_ERROR
+  if (new_path_found) {
+    printf("new path found for %d\n", vert);
+  }
+#endif
   if (pathfound) {
     int temp = end_vertex;
     while (true) {
@@ -82,10 +80,10 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         end_points[temp] = end_points[end_vertex];
       }
     }
-  }
-#if DEBUG
-  printf("%d's path found\n", vert);
+#if LOGICAL_ERROR
+    printf("%d's path found with end vertex as %d\n", vert, end_points[vert]);
 #endif
+  }
 }
 
 void make_potential_paths(
@@ -101,7 +99,8 @@ void make_potential_paths(
   path = new int[vertices];       // for noting down thw path
   descendant = new int[vertices]; //-1 means no descendant, or else points to
                                   // potential descendant that can be used
-  end_points = new int[vertices]; // tell end point of the point of given vertex
+  end_points = new int[vertices]; // tell end point of the point of given
+                                  // vertex, -1 means no path found
   ina_path = new int[vertices];   // 1 means vertex is part of potential path, 0
                                   // implies not part of any path
   bfs_verts =
@@ -109,6 +108,7 @@ void make_potential_paths(
   in_bfs = new int[vertices];
   next_bfs_verts = new int[vertices];
   for (unsigned int i = 0; i < vertices; i++) {
+    end_points[i] = -1;
     descendant[i] = -1;
     ina_path[i] = 0;
     in_bfs[i] = 0;
@@ -123,9 +123,6 @@ void make_potential_paths(
                   path, in_bfs, end_points);
     }
   }
-#if DEBUG
-  printf("Potential paths found\n");
-#endif
   delete[] path;
   delete[] in_bfs;
   delete[] ina_path;
@@ -134,6 +131,7 @@ void make_potential_paths(
 #if DEBUG
   printf("Potential paths found\n");
 #endif
+  return;
 }
 
 void update_because_path_exists(
@@ -169,6 +167,16 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
     if (V1 > V2) {
       std::swap(V1, V2); // ensure V1 is smaller i.e, V1<N/2
     }
+    int path_exists = 0;
+    if (matching[V2] >= 0) {
+      if (end_points[matching[V2]] >= 0) {
+        if (!used[end_points[matching[V2]]]) {
+          // do it atomically in parallel
+          used[end_points[matching[V2]]] = 1;
+          path_exists = 1;
+        }
+      }
+    }
 #if DEBUG
     printf("checking %d<-->%d\n", V1, V2);
 #endif
@@ -180,13 +188,9 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
       matching[V2] = V1;
       Bi_G->cardinality++;
       continue;
-    } else if (matching[V1] != -1 &&
-               matching[V2] == -1) { // current implementation, doesnt have path
-                                     // for vertices > N/2
-      continue;
-    } else if (matching[V1] == -1 && !used[end_points[matching[V2]]]) {
-      // do it atomic if implemented in parallel
-      used[end_points[matching[V2]]] = 1;
+    } else if (matching[V1] != -1 && matching[V2] == -1) {
+      continue; // current implementation, doesnt have path for vertices > N/2
+    } else if (matching[V1] == -1 && path_exists) {
       update_because_path_exists(descendant, end_points, Bi_G, matching[V2]);
       matching[V2] = V1;
       matching[V1] = V2;

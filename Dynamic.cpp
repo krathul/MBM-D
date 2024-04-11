@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <stdio.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define valid_verts(V1, V2, N)                                                 \
   ((V1 < N / 2 && N / 2 <= V2) || (N / 2 <= V1 && V2 < N / 2))

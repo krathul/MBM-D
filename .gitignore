@@ -7,4 +7,4 @@ to_do_list.txt
 *.graph
 testing.py
 MBM
-gdb_history
+.gdb_history
