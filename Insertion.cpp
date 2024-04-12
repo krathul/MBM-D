@@ -1,15 +1,25 @@
 #include "Insertion.h"
 #include <cstdio>
+#include <set>
 #define DEBUG 0
 #define LOGICAL_ERROR 0
-#define PROGRESS_CHECK 1
+#define PROGRESS_CHECK 0
 
 int threshold = 1;
 
+typedef std::set<int> new_set;
+int in_set(new_set &to_check, int &vert) {
+  if (to_check.find(vert) != to_check.end()) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 void traverse_neighbours(int &curr_vert, int *&degree_list, int *&edges,
-                         int *&matching, int *&next, int *&in_bfs, int *&path,
-                         int &bfs_count, int &pathfound, int &new_path_found,
-                         int &end_vertex, int &path_end) {
+                         int *&matching, int *&next, int *&path, int &bfs_count,
+                         int &pathfound, int &new_path_found, int &end_vertex,
+                         int &path_end, new_set &bfs_set) {
   int neigh_count, *neighbours;
   neigh_count = degree_list[curr_vert + 1] - degree_list[curr_vert];
   neighbours = &edges[degree_list[curr_vert]];
@@ -20,11 +30,12 @@ void traverse_neighbours(int &curr_vert, int *&degree_list, int *&edges,
     printf("checking neighbour %d, nmatch is %d and bfs status %d\n", neighbour,
            nmatch, in_bfs[nmatch]);
 #endif
-    if (nmatch != -1 && !in_bfs[nmatch]) { // if neighbour has a
-                                           // matching add matching to
-                                           // bfs array
+    if (nmatch != -1 && !in_set(bfs_set, nmatch)) { // if neighbour has a
+                                                    // matching add matching to
+                                                    // bfs array
       next[bfs_count++] = nmatch;
-      in_bfs[nmatch] = 1;
+      // in_bfs[nmatch] = 1;
+      bfs_set.insert(nmatch);
       path[nmatch] = curr_vert;
     } else if (nmatch == -1) { // neighbour is unnmatched, end search_path
 #if LOGICAL_ERROR
@@ -43,7 +54,8 @@ void traverse_neighbours(int &curr_vert, int *&degree_list, int *&edges,
 
 void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
                  int *&ina_path, int *&curr, int *&next, int *&path,
-                 int *&in_bfs, int *&end_points) {
+                 int *&end_points) {
+  new_set bfs_set;
 #if LOGICAL_ERROR
   printf("Searching path for %d\n", vert);
 #endif
@@ -53,7 +65,6 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
   int pathfound = 0,
       new_path_found = 0; // to demarcate if we have clashing path or new path
   curr[0] = vert;
-  in_bfs[vert] = 1;
   while (bfs_count) {
 #if LOGICAL_ERROR
     printf("BFSing\n");
@@ -68,14 +79,16 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         end_vertex = end_points[curr_vert];
       } else {
         traverse_neighbours(curr_vert, Bi_G->in_degree_list, Bi_G->ins,
-                            Bi_G->matching, next, in_bfs, path, next_bfs_count,
-                            pathfound, new_path_found, end_vertex, path_end);
+                            Bi_G->matching, next, path, next_bfs_count,
+                            pathfound, new_path_found, end_vertex, path_end,
+                            bfs_set);
         if (new_path_found) {
           break;
         }
         traverse_neighbours(curr_vert, Bi_G->out_degree_list, Bi_G->outs,
-                            Bi_G->matching, next, in_bfs, path, next_bfs_count,
-                            pathfound, new_path_found, end_vertex, path_end);
+                            Bi_G->matching, next, path, next_bfs_count,
+                            pathfound, new_path_found, end_vertex, path_end,
+                            bfs_set);
         if (new_path_found) {
           break;
         }
@@ -122,7 +135,7 @@ void make_potential_paths(
                         // can be discarded after searched once tbh
   int *ina_path,
       *path; // path will allow reverse travel to update descendant
-  int *bfs_verts, *next_bfs_verts, *in_bfs;
+  int *bfs_verts, *next_bfs_verts;
   unsigned int vertices = Bi_G->vertices;
   // potentially these below arrays can be made half their size
   path = new int[vertices];       // for noting down thw path
@@ -134,13 +147,11 @@ void make_potential_paths(
                                   // implies not part of any path
   bfs_verts =
       new int[vertices]; // to make note of the path to make for a vertex
-  in_bfs = new int[vertices];
   next_bfs_verts = new int[vertices];
   for (unsigned int i = 0; i < vertices; i++) {
     end_points[i] = -1;
     descendant[i] = -1;
     ina_path[i] = 0;
-    in_bfs[i] = 0;
   }
   for (unsigned int i = 0; i < vertices / 2; i++) {
 #if PROGRESS_CHECK
@@ -150,16 +161,11 @@ void make_potential_paths(
     }
 #endif
     if (Bi_G->matching[i] != -1 && !ina_path[i]) {
-      /*for (int j = 0; j < vertices; j++) {
-        path[j] = -1;
-        in_bfs[j] = 0;
-      }*/
       search_path(i, descendant, Bi_G, ina_path, bfs_verts, next_bfs_verts,
-                  path, in_bfs, end_points);
+                  path, end_points);
     }
   }
   delete[] path;
-  delete[] in_bfs;
   delete[] ina_path;
   delete[] bfs_verts;
   delete[] next_bfs_verts;
