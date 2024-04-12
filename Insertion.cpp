@@ -4,6 +4,7 @@
 #define DEBUG 0
 #define LOGICAL_ERROR 0
 #define PROGRESS_CHECK 0
+#define PATH_DEBUG 1
 
 int threshold = 1;
 
@@ -77,6 +78,7 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
         pathfound = 1;
         path_end = curr_vert;
         end_vertex = end_points[curr_vert];
+        break;
       } else {
         traverse_neighbours(curr_vert, Bi_G->in_degree_list, Bi_G->ins,
                             Bi_G->matching, next, path, next_bfs_count,
@@ -93,6 +95,9 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
           break;
         }
       }
+    }
+    if (new_path_found) {
+      break;
     }
     bfs_count = next_bfs_count;
     temp_pointer = curr;
@@ -111,7 +116,7 @@ void search_path(unsigned int &vert, int *&descendant, graph *&Bi_G,
       printf("Updating descendants\n");
 #endif
       ina_path[temp] = 1;
-      if (new_path_found) { // updating parents endpoints
+      if (new_path_found) {
         end_points[temp] = end_vertex;
       } else {
         end_points[temp] = end_points[path_end];
@@ -138,19 +143,13 @@ void make_potential_paths(
   int *bfs_verts, *next_bfs_verts;
   unsigned int vertices = Bi_G->vertices;
   // potentially these below arrays can be made half their size
-  path = new int[vertices];       // for noting down thw path
-  descendant = new int[vertices]; //-1 means no descendant, or else points to
-                                  // potential descendant that can be used
-  end_points = new int[vertices]; // tell end point of the point of given
-                                  // vertex, -1 means no path found
-  ina_path = new int[vertices];   // 1 means vertex is part of potential path, 0
-                                  // implies not part of any path
+  path = new int[vertices];     // for noting down thw path
+  ina_path = new int[vertices]; // 1 means vertex is part of potential path, 0
+                                // implies not part of any path
   bfs_verts =
       new int[vertices]; // to make note of the path to make for a vertex
   next_bfs_verts = new int[vertices];
   for (unsigned int i = 0; i < vertices; i++) {
-    end_points[i] = -1;
-    descendant[i] = -1;
     ina_path[i] = 0;
   }
   for (unsigned int i = 0; i < vertices / 2; i++) {
@@ -178,7 +177,7 @@ void make_potential_paths(
 void update_because_path_exists(
     int *&descendant, int *&end_points, graph *&Bi_G,
     int V) { // passing V not by reference since we are updating it in function
-#if DEBUG
+#if PATH_DEBUG
   printf("%d being updated because a path is available\n", V);
 #endif
   while (descendant[V] != -1) { // stop when no more descendant is there
@@ -202,19 +201,21 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
   for (unsigned int i = 0; i < Bi_G->vertices; i++) {
     used[i] = 0;
   }
+  int *path_exists = new int[Bi_G->vertices];
   for (unsigned int i = 0; i < I_count; i++) {
     int V1 = E1[i];
     int V2 = E2[i];
     if (V1 > V2) {
-      std::swap(V1, V2); // ensure V1 is smaller i.e, V1<N/2
+      std::swap(E1[i], E2[i]); // ensure V1 is smaller i.e, V1<N/2
     }
-    int path_exists = 0;
     if (matching[V2] >= 0) {
       if (end_points[matching[V2]] >= 0) {
+        path_exists[matching[V2]] =
+            0; // we know path was found, just arent sure if its already used
         if (!used[end_points[matching[V2]]]) {
           // do it atomically in parallel
           used[end_points[matching[V2]]] = 1;
-          path_exists = 1;
+          path_exists[matching[V2]] = 1;
         }
       }
     }
@@ -231,11 +232,12 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
       continue;
     } else if (matching[V1] != -1 && matching[V2] == -1) {
       continue; // current implementation, doesnt have path for vertices > N/2
-    } else if (matching[V1] == -1 && path_exists) {
+    } else if (matching[V1] == -1 && path_exists[matching[V2]]) {
       update_because_path_exists(descendant, end_points, Bi_G, matching[V2]);
       matching[V2] = V1;
       matching[V1] = V2;
       Bi_G->cardinality++;
     }
   }
+  delete[] path_exists;
 }

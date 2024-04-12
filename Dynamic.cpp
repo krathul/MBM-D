@@ -109,6 +109,15 @@ void graph_update(graph *&Bi_G, char *&file) {
 #if DEBUG
   printf("Starting to make potential paths\n");
 #endif
+  unsigned int vertices = Bi_G->vertices;
+  descendant = new int[vertices]; //-1 means no descendant, or else points to
+                                  // potential descendant that can be used
+  end_points = new int[vertices]; // tell end point of the point of given
+                                  // vertex, -1 means no path found
+  for (unsigned int i = 0; i < vertices; i++) {
+    end_points[i] = -1;
+    descendant[i] = -1;
+  }
   make_potential_paths(Bi_G, descendant, end_points);
 
 #if DEBUG

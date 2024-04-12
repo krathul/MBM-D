@@ -30,8 +30,10 @@ void update_deleteing_edges(graph *&Bi_G, int *&DE1, int *&DE2,
                             unsigned int &D_count) {
   int *matching = Bi_G->matching;
   for (unsigned int i = 0; i < D_count; i++) {
-    matching[DE1[i]] = -1;
-    matching[DE2[i]] = -1;
-    Bi_G->cardinality--;
+    if (matching[DE1[i]] == DE2[i]) {
+      matching[DE1[i]] = -1;
+      matching[DE2[i]] = -1;
+      Bi_G->cardinality--;
+    }
   }
 }
