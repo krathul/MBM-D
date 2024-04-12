@@ -1,7 +1,7 @@
 #include "Dynamic.h"
 #include "Deletion.h"
 #include "Insertion.h"
-#include <Modified_Bi_partite_matching.h>
+#include "Modified_Bi_partite_matching.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -118,7 +118,7 @@ void graph_update(graph *&Bi_G, char *&file) {
     end_points[i] = -1;
     descendant[i] = -1;
   }
-  make_potential_paths(Bi_G, descendant, end_points);
+  // make_potential_paths(Bi_G, descendant, end_points);
 
 #if DEBUG
   printf("Parsing file for getting insertion and deletions\n");

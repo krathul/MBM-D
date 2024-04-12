@@ -1,5 +1,11 @@
 output
+rand_ggen.py
+cmake_install.cmake
 *sh
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*txt
 .cache/
 build/
 compile_commands.json

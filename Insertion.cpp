@@ -4,7 +4,7 @@
 #define DEBUG 0
 #define LOGICAL_ERROR 0
 #define PROGRESS_CHECK 0
-#define PATH_DEBUG 1
+#define PATH_DEBUG 0
 
 int threshold = 1;
 
@@ -198,20 +198,21 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
 #endif
   used = new int[Bi_G->vertices]; // tells if that endpoint was already
                                   // used to find as a path
+  int *path_exists = new int[Bi_G->vertices];
   for (unsigned int i = 0; i < Bi_G->vertices; i++) {
     used[i] = 0;
+    path_exists[i] = 0;
   }
-  int *path_exists = new int[Bi_G->vertices];
   for (unsigned int i = 0; i < I_count; i++) {
     int V1 = E1[i];
     int V2 = E2[i];
     if (V1 > V2) {
       std::swap(E1[i], E2[i]); // ensure V1 is smaller i.e, V1<N/2
     }
+    V1 = E1[i];
+    V2 = E2[i];
     if (matching[V2] >= 0) {
       if (end_points[matching[V2]] >= 0) {
-        path_exists[matching[V2]] =
-            0; // we know path was found, just arent sure if its already used
         if (!used[end_points[matching[V2]]]) {
           // do it atomically in parallel
           used[end_points[matching[V2]]] = 1;
@@ -222,17 +223,20 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
 #if DEBUG
     printf("checking %d<-->%d\n", V1, V2);
 #endif
-    if (matching[V1] == -1 && matching[V2] == -1) {
+    if (matching[V1] == -1 && matching[V2] == -1 &&
+        !used[V2]) { // if v2 is used, it means its technically matched
 #if DEBUG
       printf("adding %d--%d\n", V1, V2);
 #endif
       matching[V1] = V2;
       matching[V2] = V1;
+      // atomically
+      used[V2] = 1; // V2, cant be a valid end_point anymore
       Bi_G->cardinality++;
       continue;
     } else if (matching[V1] != -1 && matching[V2] == -1) {
       continue; // current implementation, doesnt have path for vertices > N/2
-    } else if (matching[V1] == -1 && path_exists[matching[V2]]) {
+    } else if (matching[V1] == -1 && path_exists[matching[V2]] && !used[V2]) {
       update_because_path_exists(descendant, end_points, Bi_G, matching[V2]);
       matching[V2] = V1;
       matching[V1] = V2;
