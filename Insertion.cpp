@@ -198,12 +198,13 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
 #endif
   used = new int[Bi_G->vertices]; // tells if that endpoint was already
                                   // used to find as a path
-  int *path_exists = new int[Bi_G->vertices];
+  // int *path_exists = new int[Bi_G->vertices];
   for (unsigned int i = 0; i < Bi_G->vertices; i++) {
     used[i] = 0;
-    path_exists[i] = 0;
+    // path_exists[i] = 0;
   }
   for (unsigned int i = 0; i < I_count; i++) {
+    int path_exists = 0;
     int V1 = E1[i];
     int V2 = E2[i];
     if (V1 > V2) {
@@ -216,7 +217,8 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
         if (!used[end_points[matching[V2]]]) {
           // do it atomically in parallel
           used[end_points[matching[V2]]] = 1;
-          path_exists[matching[V2]] = 1;
+          // path_exists[matching[V2]] = 1;
+          path_exists = 1;
         }
       }
     }
@@ -236,12 +238,13 @@ void update_inserting_edges(graph *&Bi_G, int *&descendant, int *&end_points,
       continue;
     } else if (matching[V1] != -1 && matching[V2] == -1) {
       continue; // current implementation, doesnt have path for vertices > N/2
-    } else if (matching[V1] == -1 && path_exists[matching[V2]] && !used[V2]) {
+    } else if (matching[V1] == -1 && path_exists && !used[V2]) {
+      path_exists = 0;
       update_because_path_exists(descendant, end_points, Bi_G, matching[V2]);
       matching[V2] = V1;
       matching[V1] = V2;
       Bi_G->cardinality++;
     }
   }
-  delete[] path_exists;
+  // delete[] path_exists;
 }
