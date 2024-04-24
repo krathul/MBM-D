@@ -281,7 +281,9 @@ void M_match(graph *&Bi_G, unsigned int *&diff_deg_list,
 #if LOGICAL_CHECK
       printf("%d has a match %d\n", i, cmatch[i]);
 #endif
-      Bi_G->cardinality++; // add 1 only in this half
+      if (rmatch[cmatch[i]] == i) {
+        Bi_G->cardinality++;
+      } // add 1 only in this half
     }
   }
   for (unsigned int i = vertices / 2; i < vertices; i++) {
