@@ -8,6 +8,9 @@ Makefile
 *txt
 .cache/
 build/
+log/
+test/
+dataset/
 compile_commands.json
 to_do_list.txt
 *.graph

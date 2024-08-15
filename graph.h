@@ -8,18 +8,20 @@
 typedef std::set<std::pair<int, int>> edge_set;
 
 typedef struct graph {
-  unsigned vertices;
-  unsigned edges;
-  int *ins;
-  int *outs;
-  int *in_degree_list;
-  int *out_degree_list;
-  int *matching;
-  unsigned int cardinality;
+    unsigned u_verts;
+    unsigned v_verts;
+    unsigned vertices;
+    unsigned edges;
+    int* ins;
+    int* outs;
+    int* in_degree_list;
+    int* out_degree_list;
+    int* matching;
+    unsigned int cardinality;
 } graph;
 
-graph *make_graph(FILE *&file, int &verts);
+graph* make_graph(FILE*& file, int& u_verts, int& v_verts);
 
-void clean_graph(graph *&g);
+void clean_graph(graph*& g);
 
 #endif

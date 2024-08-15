@@ -145,7 +145,6 @@ void fixmatching(int *&cmatch, int *&rmatch, graph *&g) {
 }
 
 void match(graph *&Bi_G) {
-  printf("Starting with bi-partite matching\n");
   unsigned vertices = Bi_G->vertices;
   int L0 = 0;
 //////////////////////////////////////

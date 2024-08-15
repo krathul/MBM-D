@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <omp.h>
 #include <stdio.h>
+#include <chrono>
+#include <iostream>
 
 #define DEBUG 0
 
@@ -97,7 +99,7 @@ void make_diff_csr(int *&E1, int *&E2, unsigned int *&diff_edges,
   delete[] temp_count;
 }
 
-void graph_update(graph *&Bi_G, char *&file) {
+void graph_update(graph *&Bi_G, char* file) {
   FILE *update_file;
   update_file = fopen(file, "r");
   int *E1, *E2;
@@ -123,12 +125,21 @@ void graph_update(graph *&Bi_G, char *&file) {
 #if DEBUG
   printf("Parsing file for getting insertion and deletions\n");
 #endif
+  auto t1 = std::chrono::high_resolution_clock::now();
   parse_update_file(update_file, E1, E2, DE1, DE2, D_count, I_count,
                     Bi_G->vertices, deleted_edges);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto diff1 = std::chrono::duration<double, std::milli>(t2 - t1).count();
+  std::cout << "parsing update : " << diff1 << "ms\n";
   fclose(update_file);
-  printf("Starting with updating the graph\n");
-  double start = omp_get_wtime();
+
+  t1 = std::chrono::high_resolution_clock::now();
   update_inserting_edges(Bi_G, descendant, end_points, E1, E2, I_count, used);
+  t2 = std::chrono::high_resolution_clock::now();
+  diff1 = std::chrono::duration<double, std::milli>(t2 - t1).count();
+  std::cout << "inserting : " << diff1 << "ms\n";
+
+  t1 = std::chrono::high_resolution_clock::now();
   diff_edges =
       new unsigned int[I_count *
                        2]; // for evey insertion, we need two extra spaces
@@ -137,12 +148,23 @@ void graph_update(graph *&Bi_G, char *&file) {
     diff_deg_list[i] = 0;
   }
   make_diff_csr(E1, E2, diff_edges, diff_deg_list, Bi_G->vertices, I_count);
+  t2 = std::chrono::high_resolution_clock::now();
+  diff1 = std::chrono::duration<double, std::milli>(t2 - t1).count();
+  std::cout << "intermediate calculation : " << diff1 << "ms\n";
+
+  t1 = std::chrono::high_resolution_clock::now();
   update_deleteing_edges(Bi_G, DE1, DE2, D_count);
-  printf("Graph has been updated with new info, starting for bipartite "
-         "matching now\n");
+  t2 = std::chrono::high_resolution_clock::now();
+  diff1 = std::chrono::duration<double, std::milli>(t2 - t1).count();
+  std::cout << "deleting : " << diff1 << "ms\n";
+
+  t1 = std::chrono::high_resolution_clock::now();
   M_match(Bi_G, diff_deg_list, diff_edges, deleted_edges);
-  double end = omp_get_wtime();
-  printf("\n%f second taken for update\n", end - start);
+  t2 = std::chrono::high_resolution_clock::now();
+  diff1 = std::chrono::duration<double, std::milli>(t2 - t1).count();
+  std::cout << "matching : " << diff1 << "ms\n";
+
+
   delete[] E1;
   delete[] E2;
   delete[] DE1;
